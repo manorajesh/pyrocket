@@ -1,0 +1,6 @@
+Step 1:
+Diffusion (averaged by neighbors)
+- Solve system of equations with Guass-Seidel Method
+
+Step 2:
+Advection ()
