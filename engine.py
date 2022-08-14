@@ -2,13 +2,13 @@ import pygame
 import numpy as np
 from kelvin_table import kelvin_table
 
-BACKGROUND = BLACK = (0, 0, 0)
+BACKGROUND = BLACK = (0, 0, 100)
 DAMPING = 0.50
 SCREEN = WIDTH, HEIGHT = 800, 600
 HALF_HEIGHT = HEIGHT // 2
 
 class AirParticle(pygame.sprite.Sprite):
-    def __init__(self, x, y, velocity=(20, 1)):
+    def __init__(self, x, y, nozzle, velocity=(20, 1)):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.image.load("particle.png")
         self.image = pygame.transform.scale(self.image, (5, 5))
@@ -18,12 +18,17 @@ class AirParticle(pygame.sprite.Sprite):
         self.vel = np.array(velocity, dtype=np.float64)
         self.size = np.array(self.image.get_size(), dtype=np.float64)
 
+        self.nozzle_rect = nozzle.get_rect()
+
         self.temperature = 6000 # Kelvin
         self.opacity = 255
         self.image.fill(kelvin_table[self.temperature])
 
     def update(self):
         collisions = pygame.sprite.spritecollide(self, self.groups()[0], False)
+        if self.rect.colliderect(self.nozzle_rect):
+            #self.vel *= -1 * DAMPING
+            pass
         for collision in collisions:
             if collision is not self:
                 self.vel += collision.vel * DAMPING
@@ -40,12 +45,11 @@ class AirParticle(pygame.sprite.Sprite):
         self.temperature -= 100
 
         screen.fill(BACKGROUND)
-        #screen.blit(nozzle, (100, HALF_HEIGHT-250))
         try:
             self.image.fill(kelvin_table[self.temperature])
         except KeyError:
             self.temperature = 900
-            self.opacity -= 10
+            self.opacity -= 5
             self.image.set_alpha(self.opacity)
             if self.opacity <= 0:
                 self.kill()
@@ -53,20 +57,48 @@ class AirParticle(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(self.image, self.size)
         self.rect.center = self.pos
 
+class Engine(pygame.sprite.Sprite):
+    def __init__(self):
+        self.nozzle = pygame.image.load("engine_nozzle.png").convert_alpha()
+        self.nozzle = pygame.transform.scale(self.nozzle, (750, 500))
+        self.particles = pygame.sprite.Group()
+
+    def update(self):
+        self.particles.add(AirParticle(50, np.random.randint(HALF_HEIGHT-20, HALF_HEIGHT+20), self.nozzle))
+        self.particles.update()
+        self.particles.draw(screen)
+        screen.blit(engine.nozzle, (-100, 0))
+
+class FPS(pygame.sprite.Sprite):
+    def __init__(self):
+        self.font = pygame.font.SysFont("monospace", 15)
+        self.fps = 0
+        self.last = 0
+
+    def update(self):
+        self.fps = int(clock.get_fps())
+        self.last += 1
+        if self.last == 60:
+            self.last = 0
+            print(self.fps)
+        
 if __name__ == "__main__":
     pygame.init()
-    screen = pygame.display.set_mode((800, 600))
-    nozzle = pygame.image.load("nozzle.png").convert_alpha()
-    nozzle = pygame.transform.scale(nozzle, (100, 500))
-    particles = pygame.sprite.Group()
+    screen = pygame.display.set_mode(SCREEN)
+    pygame.display.set_caption("Engine")
+    pygame.display.set_icon(pygame.image.load("icon.png"))
+
     clock = pygame.time.Clock()
+    engine = Engine()
+    fps = FPS()
+
     while True:
-        clock.tick(30)
-        particles.add(AirParticle(0, np.random.randint(HALF_HEIGHT-30, HALF_HEIGHT+30)))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                exit()
-        particles.update()
-        particles.draw(screen)
+                quit()
+
+        engine.update()
+        fps.update()
         pygame.display.flip()
+        clock.tick(60)
