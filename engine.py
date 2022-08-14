@@ -11,12 +11,14 @@ class AirParticle(pygame.sprite.Sprite):
     def __init__(self, x, y, velocity=(20, 1)):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.image.load("particle.png")
+        self.image = pygame.transform.scale(self.image, (5, 5))
         self.rect = self.image.get_rect()
         self.image.fill(BACKGROUND)
         self.pos = np.array([x, y], dtype=np.float64)
         self.vel = np.array(velocity, dtype=np.float64)
+        self.size = np.array(self.image.get_size(), dtype=np.float64)
 
-        self.temperature = 3400 # Kelvin
+        self.temperature = 6000 # Kelvin
         self.opacity = 255
         self.image.fill(kelvin_table[self.temperature])
 
@@ -27,14 +29,13 @@ class AirParticle(pygame.sprite.Sprite):
                 self.vel += collision.vel * DAMPING
                 collision.vel = -self.vel
 
-        self.vel[1] -= 0.01
         self.vel += np.random.randint(-1, 2, 2)
         self.pos += self.vel
 
         if self.pos[0] < 0 or self.pos[0] > WIDTH:
-            self.vel[0] *= -1 * 0.90
+            self.vel[0] *= -1 * DAMPING
         if self.pos[1] < 0 or self.pos[1] > HEIGHT:
-            self.vel[1] *= -1 * 0.90
+            self.vel[1] *= -1 * DAMPING
 
         self.temperature -= 100
 
@@ -44,10 +45,12 @@ class AirParticle(pygame.sprite.Sprite):
             self.image.fill(kelvin_table[self.temperature])
         except KeyError:
             self.temperature = 900
-            self.opacity -= 50
+            self.opacity -= 10
             self.image.set_alpha(self.opacity)
             if self.opacity <= 0:
                 self.kill()
+        self.size = abs(self.size - 0.1)
+        self.image = pygame.transform.scale(self.image, self.size)
         self.rect.center = self.pos
 
 if __name__ == "__main__":
@@ -58,9 +61,7 @@ if __name__ == "__main__":
     particles = pygame.sprite.Group()
     clock = pygame.time.Clock()
     while True:
-        clock.tick(60)
-        particles.add(AirParticle(0, np.random.randint(HALF_HEIGHT-30, HALF_HEIGHT+30)))
-        particles.add(AirParticle(0, np.random.randint(HALF_HEIGHT-30, HALF_HEIGHT+30)))
+        clock.tick(30)
         particles.add(AirParticle(0, np.random.randint(HALF_HEIGHT-30, HALF_HEIGHT+30)))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
