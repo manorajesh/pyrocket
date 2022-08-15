@@ -1,5 +1,5 @@
-"""Real-Time Fluid Dynamics for Games by Jos Stam (2003).
 
+"""Real-Time Fluid Dynamics for Games by Jos Stam (2003).
 Parts of author's work are also protected
 under U. S. patent #6,266,071 B1 [Patent].
 
@@ -19,11 +19,13 @@ How to use this demo:
   Add velocities with the left mouse button and dragging the mouse
   Toggle density/velocity display with the 'v' key
   Clear the simulation by pressing the 'c' key
+
+(porting by Alberto Santini)
 """
 
-import sys
 from numpy import zeros, float64
 from solver import vel_step, dens_step
+from kelvin_table import kelvin_table
 
 try:
     from OpenGL.GLUT import *
@@ -31,7 +33,7 @@ try:
     from OpenGL.GLU import *
 except ImportError:
     print('ERROR: PyOpenGL not installed properly.')
-    sys.exit()
+    exit(1)
 
 N = 64 # resolution
 size = N + 2 # size of grid and data
@@ -65,6 +67,7 @@ v = zeros((size, size), float64)  # velocity
 v_prev = zeros((size, size), float64)
 dens = zeros((size, size), float64)  # density
 dens_prev = zeros((size, size), float64)
+temperature = 3400
 
 
 def clear_data():
@@ -118,6 +121,8 @@ def draw_velocity():
 
 def draw_density():
     """draw_density."""
+
+    global temperature
 
     h = 1.0 / N
 
@@ -217,7 +222,7 @@ def idle_func():
     global dens, dens_prev, u, u_prev, v, v_prev, N, visc, dt, diff
 
     for i in range(20, 30):
-        dens[10, i] = 1.0
+        dens[10, i] = 1
         u[10, i] = 1
 
 
@@ -245,7 +250,7 @@ def open_glut_window():
     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE)
     glutInitWindowPosition(0, 0)
     glutInitWindowSize(win_x, win_y)
-    glutCreateWindow("Alias | wavefront (porting by Alberto Santini)")
+    glutCreateWindow("Rocket Engine Simulation")
     glClearColor(0.0, 0.0, 0.0, 1.0)
     glClear(GL_COLOR_BUFFER_BIT)
     glutSwapBuffers()

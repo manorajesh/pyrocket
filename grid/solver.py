@@ -24,14 +24,14 @@ def set_bnd(N, b, x):
             x[N + 1, i] = -x[N, i]
         else:
             x[N + 1, i] = x[N, i]
-        if b == 2:
+        """if b == 2:
             x[i, 0] = -x[i, 1]
         else:
             x[i, 0] = x[i, 1]
         if b == 2:
             x[i, N + 1] = -x[i, N]
         else:
-            x[i, N + 1] = x[i, N]
+            x[i, N + 1] = x[i, N]"""
 
     x[0, 0] = 0.5 * (x[1, 0] + x[0, 1])
     x[0, N + 1] = 0.5 * (x[1, N + 1] + x[0, N])
